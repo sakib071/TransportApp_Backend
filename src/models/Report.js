@@ -11,8 +11,7 @@ const historySchema = new mongoose.Schema({
 // so the 2dsphere index simply skips those documents for $near queries.
 const locationSchema = new mongoose.Schema({
   label: { type: String, default: '' },
-  type: { type: String, enum: ['Point'] },
-  coordinates: { type: [Number] }
+  type: { type: String, enum: ['Point'] }
 }, { _id: false });
 
 const reportSchema = new mongoose.Schema({
@@ -33,7 +32,10 @@ const reportSchema = new mongoose.Schema({
   history: [historySchema]
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
-reportSchema.index({ location: '2dsphere' });
+// Index the coordinates path specifically (not the whole location object),
+// and mark it sparse so label-only reports (no GPS/coordinates) are skipped
+// by the index instead of throwing "can't extract geo keys".
+// reportSchema.index({ 'location.coordinates': '2dsphere' }, { sparse: true });
 reportSchema.index({ category: 1, status: 1, createdAt: -1 });
 
 reportSchema.virtual('confirmations').get(function () {
