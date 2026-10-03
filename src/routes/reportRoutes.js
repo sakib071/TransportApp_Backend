@@ -14,6 +14,7 @@ router.post('/', protect, upload.single('photo'), ctrl.createReport);
 
 router.get('/:id', optionalAuth, ctrl.getOne);
 router.post('/:id/confirm', protect, ctrl.confirm);
+router.post('/:id/vote', protect, ctrl.voteOnReport);
 router.patch('/:id/status', protect, restrictTo('staff'), ctrl.updateStatus);
 router.patch('/:id/moderate', protect, restrictTo('staff'), ctrl.moderate);
 

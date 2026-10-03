@@ -21,10 +21,11 @@ const reportSchema = new mongoose.Schema({
   line: { type: String, default: '' },
   location: { type: locationSchema, default: () => ({}) },
   photo: { type: String, default: null },
-  status: { type: String, enum: ['reported', 'under_review', 'in_progress', 'resolved', 'closed'], default: 'reported' },
   moderation: { type: String, enum: ['pending', 'approved', 'rejected', 'spam'], default: 'pending' },
-  reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  status: { type: String, enum: ['reported', 'under_review', 'in_progress', 'resolved', 'closed'], default: 'reported' },
   confirmedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  deniedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // "not there" votes
+  reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   aiSuggested: {
     category: String,
     confidence: Number

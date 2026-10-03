@@ -65,6 +65,37 @@ exports.createReport = catchAsync(async (req, res) => {
   res.status(201).json({ report });
 });
 
+exports.voteOnReport = async (req, res) => {
+  const { action } = req.body; // 'confirm' | 'deny'
+  const userId = req.user.id;
+
+  const report = await Report.findById(req.params.id);
+  if (!report) return res.status(404).json({ message: 'Report not found' });
+
+  if (report.status !== 'under_review') {
+    return res.status(400).json({ message: `Voting closed — status is ${report.status}` });
+  }
+
+  // remove any prior vote so switching sides / re-voting doesn't stack
+  report.confirmedBy.pull(userId);
+  report.deniedBy.pull(userId);
+
+  if (action === 'confirm') report.confirmedBy.push(userId);
+  else if (action === 'deny') report.deniedBy.push(userId);
+  else return res.status(400).json({ message: 'Invalid action' });
+
+  if (report.confirmedBy.length >= 3) {
+    report.moderation = 'approved';
+    report.history.push({ action: 'approved', note: '3 community confirmations' });
+  } else if (report.deniedBy.length >= 3) {
+    report.status = 'resolved';
+    report.history.push({ action: 'resolved', note: '3 community denials — not present' });
+  }
+
+  await report.save();
+  res.json(report);
+};
+
 exports.getFeed = catchAsync(async (req, res) => {
   const filter = { moderation: 'approved' };
   if (req.query.category && req.query.category !== 'all') filter.category = req.query.category;
